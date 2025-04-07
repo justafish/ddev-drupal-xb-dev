@@ -7,9 +7,7 @@ This is a DDEV addon for doing Drupal Experience Builder development.
   ```
   ddev drupal install standard
   ```
-- Cline Experience Builder
-
-  inside your Drupal core checkout:
+- Clone Experience Builder inside your Drupal core checkout:
   ```
   git clone git@git.drupal.org:project/experience_builder.git modules/contrib/experience_builder
   ```
