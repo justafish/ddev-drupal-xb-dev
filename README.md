@@ -2,7 +2,7 @@
 
 This is a DDEV addon for doing Drupal Experience Builder development.
 
-1. Follow these instructions https://github.com/justafish/ddev-drupal-core-dev?tab=readme-ov-file#ddev-core-dev
+1. Follow these instructions to install `justafish/ddev-drupal-core-dev` https://github.com/justafish/ddev-drupal-core-dev?tab=readme-ov-file#ddev-core-dev
 2. Launch your site
 ```
 ddev launch
