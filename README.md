@@ -2,7 +2,11 @@
 
 This is a DDEV addon for doing Drupal Experience Builder development.
 
-- Follow these instructions to install `justafish/ddev-drupal-core-dev` https://github.com/justafish/ddev-drupal-core-dev?tab=readme-ov-file#ddev-core-dev
+- Follow [these instructions](https://github.com/justafish/ddev-drupal-core-dev?tab=readme-ov-file#installation) to install `justafish/ddev-drupal-core-dev`
+- Run the installer
+  ```
+  ddev drupal install standard
+  ```
 - Install Experience Builder
 
   inside your Drupal core checkout:
