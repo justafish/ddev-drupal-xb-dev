@@ -23,6 +23,7 @@ This is a DDEV addon for doing Drupal Experience Builder development.
   ```
   ddev drupal test:extensions-enable
   ddev drupal module:install xb_dev_standard
+  ddev drupal module:install xb_dev_mode
   ```
 - Visit [`https://drupal.ddev.site/node/add/article`](https://drupal.ddev.site/node/add/article) and save an article (just filling out the title is enough)
 - In the toolbar, click "Experience Builder" 🥳
