@@ -14,6 +14,7 @@ This is a DDEV addon for doing Drupal Experience Builder development.
 - Run the installer
   ```
   ddev drupal install standard
+  ddev launch
   ```
 - Enable Experience Builder
   ```
