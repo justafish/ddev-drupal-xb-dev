@@ -20,14 +20,20 @@ This is a DDEV addon for doing Drupal Experience Builder development.
   ```
   ddev drupal module:install experience_builder
   ```
-- Enable the test module to develop Experience Builder on top of the Standard install profile
+- Enable the test module to develop Experience Builder on top of the standard install profile
   ```
   ddev drupal test:extensions-enable
   ddev drupal module:install xb_dev_standard
   ```
 - Visit [`https://drupal.ddev.site/node/add/article`](https://drupal.ddev.site/node/add/article) and save an article (just filling out the title is enough)
 - In the toolbar, click "Experience Builder" 🥳
-- Run the Cypress tests
-  ```
-  ddev xb-npm run cy:run
-  ```
+
+Two utility commands are available:
+
+```
+# Run commands in the experience_builder module directory
+ddev xb ls
+
+# Run commands in the experience_builder/ui directory
+ddev xb-ui run cy:run
+```
