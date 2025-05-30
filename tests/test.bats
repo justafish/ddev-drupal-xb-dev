@@ -53,8 +53,8 @@ health_checks() {
 
   cd "${TESTDIR_CHECKOUT}"
   ddev exec "curl -s chrome:7900" | grep -q "noVNC"
-  ddev phpunit web/core/tests/Drupal/Tests/Component/Datetime/DateTimePlusTest.php
-  ddev phpunit web/core/modules/system/tests/src/FunctionalJavascript/FrameworkTest.php
+  ddev phpunit core/tests/Drupal/Tests/Component/Datetime/DateTimePlusTest.php
+  ddev phpunit core/modules/system/tests/src/FunctionalJavascript/FrameworkTest.php
   ddev nightwatch tests/Drupal/Nightwatch/Tests/loginTest.js
   ddev xb-ui npx cypress run --spec tests/e2e/canary.cy.js
 }
@@ -72,15 +72,13 @@ teardown() {
 
   cd ${TESTDIR_COMPOSER}
   echo "# ddev add-on get ${DIR} with project ${PROJNAME_COMPOSER} in $(pwd)" >&3
-  run ddev add-on get ~/repos/ddev-drupal-core-dev
-  #run ddev add-on get justafish/ddev-drupal-core-dev
+  run ddev add-on get justafish/ddev-drupal-core-dev
   run ddev add-on get "${DIR}"
   assert_success
 
   cd ${TESTDIR_CHECKOUT}
   echo "# ddev add-on get ${DIR} with project ${PROJNAME_CHECKOUT} in $(pwd)" >&3
-  run ddev add-on get ~/repos/ddev-drupal-core-dev
-  #run ddev add-on get justafish/ddev-drupal-core-dev
+  run ddev add-on get justafish/ddev-drupal-core-dev
   run ddev add-on get "${DIR}"
   assert_success
 
