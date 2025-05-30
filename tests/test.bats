@@ -1,22 +1,5 @@
-#!/usr/bin/env bats
-
-# Bats is a testing framework for Bash
-# Documentation https://bats-core.readthedocs.io/en/stable/
-# Bats libraries documentation https://github.com/ztombol/bats-docs
-
-# For local tests, install bats-core, bats-assert, bats-file, bats-support
-# And run this in the add-on root directory:
-#   bats ./tests/test.bats
-# To exclude release tests:
-#   bats ./tests/test.bats --filter-tags '!release'
-# For debugging:
-#   bats ./tests/test.bats --show-output-of-passing-tests --verbose-run --print-output-on-failure
-
 setup() {
   set -eu -o pipefail
-
-  # Override this variable for your add-on:
-  export GITHUB_REPO=justafish/ddev-drupal-xb-dev
 
   TEST_BREW_PREFIX="$(brew --prefix 2>/dev/null || true)"
   export BATS_LIB_PATH="${BATS_LIB_PATH}:${TEST_BREW_PREFIX}/lib:/usr/lib/bats"
@@ -25,56 +8,81 @@ setup() {
   bats_load_library bats-support
 
   export DIR="$(cd "$(dirname "${BATS_TEST_FILENAME}")/.." >/dev/null 2>&1 && pwd)"
-  export PROJNAME="test-$(basename "${GITHUB_REPO}")"
+  export PROJNAME_COMPOSER="test-core-composer"
+  export PROJNAME_CHECKOUT="test-corecheckout"
   mkdir -p ~/tmp
-  export TESTDIR=$(mktemp -d ~/tmp/${PROJNAME}.XXXXXX)
+
+  export TESTDIR_CHECKOUT=$(mktemp -d ~/tmp/${PROJNAME_CHECKOUT}.XXXXXX)
+  export TESTDIR_COMPOSER=$(mktemp -d ~/tmp/${PROJNAME_COMPOSER}.XXXXXX)
+
   export DDEV_NONINTERACTIVE=true
   export DDEV_NO_INSTRUMENTATION=true
-  ddev delete -Oy "${PROJNAME}" >/dev/null 2>&1 || true
-  cd "${TESTDIR}"
-  run ddev config --project-name="${PROJNAME}" --project-tld=ddev.site
+
+  ddev delete -Oy ${PROJNAME_COMPOSER} >/dev/null 2>&1
+  ddev delete -Oy ${PROJNAME_CHECKOUT} >/dev/null 2>&1
+
+  composer create-project drupal/recommended-project ${TESTDIR_COMPOSER} --ignore-platform-reqs
+  cd "${TESTDIR_COMPOSER}"
+  run ddev config --project-name="${PROJNAME_COMPOSER}" --omit-containers=db --disable-settings-management
   assert_success
   run ddev start -y
   assert_success
+  run ddev composer install
+  run ddev composer require drupal/core-dev
+  mkdir -p web/modules/contrib
+  git clone --depth=1 https://git.drupalcode.org/project/experience_builder.git web/modules/contrib/experience_builder
+
+  git clone --depth=1 https://git.drupalcode.org/project/drupal.git ${TESTDIR_CHECKOUT}
+  cd "${TESTDIR_CHECKOUT}"
+  run ddev config --project-name="${PROJNAME_CHECKOUT}" --omit-containers=db --disable-settings-management
+  assert_success
+  run ddev start -y
+  assert_success
+  run ddev composer install
+  mkdir -p modules/contrib
+  git clone --depth=1 https://git.drupalcode.org/project/experience_builder.git modules/contrib/experience_builder
 }
 
 health_checks() {
-  # Do something useful here that verifies the add-on
+  cd "${TESTDIR_COMPOSER}"
+  ddev exec "curl -s chrome:7900" | grep -q "noVNC"
+  ddev phpunit web/core/tests/Drupal/Tests/Component/Datetime/DateTimePlusTest.php
+  ddev phpunit web/core/modules/system/tests/src/FunctionalJavascript/FrameworkTest.php
+  ddev nightwatch tests/Drupal/Nightwatch/Tests/loginTest.js
+  ddev xb-ui npx cypress run --spec tests/e2e/canary.cy.js
 
-  # You can check for specific information in headers:
-  # run curl -sfI https://${PROJNAME}.ddev.site
-  # assert_output --partial "HTTP/2 200"
-  # assert_output --partial "test_header"
-
-  # Or check if some command gives expected output:
-  DDEV_DEBUG=true run ddev launch
-  assert_success
-  assert_output --partial "FULLURL https://${PROJNAME}.ddev.site"
+  cd "${TESTDIR_CHECKOUT}"
+  ddev exec "curl -s chrome:7900" | grep -q "noVNC"
+  ddev phpunit web/core/tests/Drupal/Tests/Component/Datetime/DateTimePlusTest.php
+  ddev phpunit web/core/modules/system/tests/src/FunctionalJavascript/FrameworkTest.php
+  ddev nightwatch tests/Drupal/Nightwatch/Tests/loginTest.js
+  ddev xb-ui npx cypress run --spec tests/e2e/canary.cy.js
 }
 
 teardown() {
   set -eu -o pipefail
-  ddev delete -Oy ${PROJNAME} >/dev/null 2>&1
-  [ "${TESTDIR}" != "" ] && rm -rf ${TESTDIR}
+  ddev delete -Oy ${PROJNAME_COMPOSER} >/dev/null 2>&1
+  ddev delete -Oy ${PROJNAME_CHECKOUT} >/dev/null 2>&1
+  [ "${TESTDIR_COMPOSER}" != "" ] && rm -rf ${TESTDIR_COMPOSER}
+  [ "${TESTDIR_CHECKOUT}" != "" ] && rm -rf ${TESTDIR_CHECKOUT}
 }
 
 @test "install from directory" {
   set -eu -o pipefail
-  echo "# ddev add-on get ${DIR} with project ${PROJNAME} in $(pwd)" >&3
+
+  cd ${TESTDIR_COMPOSER}
+  echo "# ddev add-on get ${DIR} with project ${PROJNAME_COMPOSER} in $(pwd)" >&3
+  run ddev add-on get ~/repos/ddev-drupal-core-dev
+  #run ddev add-on get justafish/ddev-drupal-core-dev
   run ddev add-on get "${DIR}"
   assert_success
-  run ddev restart -y
-  assert_success
-  health_checks
-}
 
-# bats test_tags=release
-@test "install from release" {
-  set -eu -o pipefail
-  echo "# ddev add-on get ${GITHUB_REPO} with project ${PROJNAME} in $(pwd)" >&3
-  run ddev add-on get "${GITHUB_REPO}"
+  cd ${TESTDIR_CHECKOUT}
+  echo "# ddev add-on get ${DIR} with project ${PROJNAME_CHECKOUT} in $(pwd)" >&3
+  run ddev add-on get ~/repos/ddev-drupal-core-dev
+  #run ddev add-on get justafish/ddev-drupal-core-dev
+  run ddev add-on get "${DIR}"
   assert_success
-  run ddev restart -y
-  assert_success
+
   health_checks
 }
