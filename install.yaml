@@ -3,24 +3,39 @@
 name: ddev-drupal-xb-dev
 
 project_files:
+  - config.ddev-drupal-xb-dev.yaml
   - xb-dev/.env
-  - commands/web/xb-npm
+  - commands/web/xb
+  - commands/web/xb-ui
 
 pre_install_actions:
   - |
     #ddev-description:Check Experience Builder repository is checked out
-    if [ ! -f modules/contrib/experience_builder/.git/HEAD ]; then
+    set +u
+    WEB=""
+    if [ -d "web/core" ]; then
+      WEB="web/"
+    fi
+    cat ${WEB}modules/contrib/experience_builder/.git/HEAD
+    if [ ! -f ${WEB}modules/contrib/experience_builder/.git/HEAD ]; then
       echo "Experience builder repository is not present, run:"
-      echo "git clone git@git.drupal.org:project/experience_builder.git modules/contrib/experience_builder"
+      echo ""
+      echo "git clone git@git.drupal.org:project/experience_builder.git ${WEB}modules/contrib/experience_builder"
       exit 1;
     fi
 
 post_install_actions:
-  - ddev exec sudo apt update
-  - ddev exec sudo apt install libgtk2.0-0 libgtk-3-0 libgbm-dev libnotify-dev libnss3 libxss1 libasound2 libxtst6 xauth xvfb -y
-  - ddev exec sudo apt install chromium=134.0.6998.35-1~deb12u1 chromium-driver=134.0.6998.35-1~deb12u1 chromium-common=134.0.6998.35-1~deb12u1 -y --allow-downgrades
-  - cp xb-dev/.env ../modules/contrib/experience_builder/ui/.env
-  - ddev exec -d /var/www/html/modules/contrib/experience_builder/ui npm install
-  - ddev exec -d /var/www/html/modules/contrib/experience_builder/ui npm run build
-  - ddev exec -d /var/www/html/modules/contrib/experience_builder/ui npm exec cypress install
   - ddev composer require league/openapi-psr7-validator webflo/drupal-finder devizzent/cebe-php-openapi --dev
+  - ddev restart
+  - |
+    set +u
+    WEB=""
+    if [ -d "../web" ]; then
+      WEB="web/"
+    fi
+    cp xb-dev/.env ../${WEB}modules/contrib/experience_builder/ui/.env
+    # For when https://git.drupalcode.org/project/experience_builder/-/merge_requests/1020 is merged
+    #ddev xb npm install
+    ddev xb-ui npm install
+    ddev xb-ui npm run build
+    ddev xb-ui npm exec cypress install

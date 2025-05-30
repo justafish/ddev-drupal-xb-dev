@@ -1,0 +1,12 @@
+#!/bin/bash
+
+#ddev-generated
+## Description: Run commands in the experience builder directory
+## Usage: xb
+## Example: ddev xb npm run test
+
+if [ -d "web/core" ]; then
+  cd web/modules/contrib/experience_builder && "$@"
+else
+  cd modules/contrib/experience_builder && "$@"
+fi
